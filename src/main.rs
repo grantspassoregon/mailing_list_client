@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_desktop::tao::window::Icon;
+use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_router::prelude::*;
 use image::DynamicImage;
 use mailing_list_client::prelude::*;
@@ -14,16 +14,19 @@ fn main() -> ClientResult<()> {
     {};
     info!("Subscriber initialized.");
     // let icon = std::fs::read("./public/gp_logo.png")?;
-    let icon = image::io::Reader::open("./public/gp_logo.png")?.decode()?.into_bytes();
+    let icon = image::io::Reader::open("./public/gp_logo.png")?
+        .decode()?
+        .into_bytes();
     let icon = Icon::from_rgba(icon, 200, 267)?;
     // dioxus_desktop::launch(App);
     dioxus_desktop::launch_cfg(
         App,
         Config::new().with_window(
             WindowBuilder::new()
-            .with_title("Mailing List Client")
-            .with_window_icon(Some(icon))
-            ));
+                .with_title("Mailing List Client")
+                .with_window_icon(Some(icon)),
+        ),
+    );
     info!("🚀 Client started successfully");
     Ok(())
 }

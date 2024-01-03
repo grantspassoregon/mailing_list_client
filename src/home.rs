@@ -90,43 +90,61 @@ fn HomeContent(cx: Scope<HomeContentProps>) -> Element {
     ))
 }
 
-fn mailing_list(source_file: UseState<String>, output_file: UseState<String>, message: UseState<String>) -> ClientResult<()> {
+fn mailing_list(
+    source_file: UseState<String>,
+    output_file: UseState<String>,
+    message: UseState<String>,
+) -> ClientResult<()> {
     tracing::info!("Checking target path.");
     let mut target = output_file.get().clone();
-    if !target.contains(".csv") {
-        tracing::info!("Adding .csv extension.");
-        target = format!("{}.csv", target);
-    }
-    let target_path = std::path::Path::new(&target);
-    let source = source_file.get();
-    let path = std::path::Path::new(source);
-    match path.try_exists() {
-        Ok(true) => {
-            let records = CountyTaxlots::from_csv(source_file.get())?;
-            let mail = MailingList::try_from(&records)?;
-            let mut mail = MailingListExport::from(&mail);
-            mail.sort_by_key("properties");
-            let mail: Vec<MailingListExportItem> =
-                mail.records_ref().iter().rev().cloned().collect();
-            let mut mail = MailingListExport::new(mail);
-            match target_path.has_root() {
-                true => {
+    match target.as_str() {
+        "" => {
+            message.set("Output path cannot be empty.".to_string());
+        }
+        _ => {
+            if !target.contains(".csv") {
+                tracing::info!("Adding .csv extension.");
+                target = format!("{}.csv", target);
+            }
+            let mut target_path = std::path::Path::new(&target);
+            let source = source_file.get();
+            let path = std::path::Path::new(source);
+            match path.try_exists() {
+                Ok(true) => {
+                    let records = CountyTaxlots::from_csv(source_file.get())?;
+                    let mail = MailingList::try_from(&records)?;
+                    let mut mail = MailingListExport::from(&mail);
+                    mail.sort_by_key("properties");
+                    let mail: Vec<MailingListExportItem> =
+                        mail.records_ref().iter().rev().cloned().collect();
+                    let mut mail = MailingListExport::new(mail);
+                    if !target_path.has_root() {
+                        let cwd = match std::env::current_dir() {
+                            Ok(path) => path,
+                            Err(_) => "./".into(),
+                        };
+                        target = format!("{}\\{}", cwd.display(), target);
+                        target_path = std::path::Path::new(&target);
+                    }
                     match mail.to_csv(target_path) {
-                        Ok(_) => message.set(format!("Mailing list output to {}", target_path.display())),
-                        Err(e) => message.set(format!("Failure writing to output file location: {}", e.to_string())),
+                        Ok(_) => message.set(format!(
+                            "Mailing list output to {}",
+                            target_path.display()
+                        )),
+                        Err(e) => message.set(format!(
+                            "Failure writing to output file location: {}",
+                            e.to_string()
+                        )),
                     };
-                },
-                false => {
-                    message.set("Invalid output path.".to_string());
-                },
-            };
-        },
-        Ok(false) => {
-            message.set("Invalid source file selected.".to_string());
-        },
-        Err(e) => {
-            message.set(format!("Error reading source file: {}", e.to_string()));
-        },
+                }
+                Ok(false) => {
+                    message.set("Invalid source file selected.".to_string());
+                }
+                Err(e) => {
+                    message.set(format!("Error reading source file: {}", e.to_string()));
+                }
+            }
+        }
     }
     Ok(())
 }
