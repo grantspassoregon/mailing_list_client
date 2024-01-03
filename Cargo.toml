@@ -1,0 +1,24 @@
+[package]
+name = "mailing_list_client"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "mailing_list_client"
+
+[dependencies]
+address = { path = "../address" }
+dioxus = "0.4.3"
+dioxus-desktop = "0.4.3"
+dioxus-router = "0.4.3"
+image = "0.24.7"
+serde = { version = "1.0.193", features = ["derive"] }
+spreadsheet = { path = "../spreadsheet" }
+thiserror = "1.0.51"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+web-sys = "0.3.66"
